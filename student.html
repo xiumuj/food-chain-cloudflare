@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.2, user-scalable=yes">
+    <title>谁是凶手 · 池塘谜案 · 逻辑关系版</title>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --overlay-bg: rgba(0, 0, 0, 0.7);
+            --card-bg: #fffbe6;
+            --accent-color: #5d4037;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #0f1f17;
+            font-family: 'Segoe UI', 'Roboto', 'Courier New', monospace;
+        }
+
+        /* --- 页面切换样式 --- */
+        .page {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .page.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- 通用右上/左上角按钮 --- */
+        .next-page-btn {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: #b88542;
+            color: #141c0e;
+            border: 2px solid #6e502e;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #514024;
+            transition: transform 0.1s, box-shadow 0.1s;
+            z-index: 50;
+        }
+        .next-page-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+        /* 返回现场按钮 (左上) */
+        .back-to-scene-btn {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            background: #5f7e5a;
+            color: #f3efd4;
+            border: 2px solid #3a5435;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #2e4129;
+            transition: transform 0.1s, box-shadow 0.1s;
+            z-index: 50;
+        }
+        .back-to-scene-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        /* --- 第1页面：场景探索 --- */
+        .game-container-p1 {
+            position: relative;
+            width: 100vw;
+            height: 56.25vw; /* 16:9 比例 */
+            max-height: 100vh;
+            max-width: 177.78vh;
+            margin: auto;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            background-image: url('https://test.fukit.cn/autoupload/f/1mNAyVlguK3k6jfj2DuTvbKXl_QqVl-bpSwqP4fJO68/20260320/t97U/1375X768/background.png/webp');
+            background-size: cover;
+            background-position: center;
+        }
+        .hotspot {
+            position: absolute;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transition: transform 0.2s, background 0.3s;
+            z-index: 10;
+        }
+        .hotspot:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+        #spot-dragonfly { width: 8%; height: 8%; top: 48%; left: 13%; }
+        #spot-fish-scale { width: 9%; height: 9%; top: 74%; left: 28%; }
+        #spot-snake { width: 11%; height: 12%; top: 47%; left: 60%; }
+        #spot-snail { width: 6%; height: 8%; top: 68%; left: 22%; }
+        #spot-report { width: 10%; height: 8%; top: 82%; left: 66%; transform: rotate(-15deg); }
+        #spot-feather { width: 6%; height: 16%; top: 30%; left: 86%; transform: rotate(-15deg); }
+        .hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            pointer-events: none;
+        }
+
+        /* --- 第2页面、第3页面 容器样式 --- */
+        .page-container {
+            width: 100%;
+            max-width: 1024px;
+            height: 90vh;
+            background: #242018;
+            background-image: radial-gradient(circle at 30% 40%, #3a4d3a 0%, #1f2b1a 90%);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.8), inset 0 0 0 2px #6f8c6d;
+            padding: 20px;
+            border: 4px solid #4a5f43;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .header-det {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #131f13;
+            border-radius: 40px;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            border: 2px solid #a5a06b;
+            color: #eddbb5;
+            box-shadow: inset 0 -2px 0 #3b543b;
+        }
+        .header-det h1 { font-size: 1.8rem; letter-spacing: 2px; text-shadow: 2px 2px 0 #2d4d2d; }
+
+        .p2-layout {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            min-height: 0;
+        }
+        .p2-left {
+            flex: 1;
+            background: #2d6130;
+            border-radius: 20px;
+            padding: 20px;
+            border: 3px solid #a58f54;
+            box-shadow: inset 0 0 0 2px #e6dba3;
+            display: flex;
+            flex-direction: column;
+        }
+        .p2-right {
+            flex: 1;
+            background: #dacaa4;
+            border-radius: 20px;
+            padding: 20px;
+            border: 4px solid #7b8d5d;
+            box-shadow: inset 0 0 0 2px #e6dbb6;
+            display: flex;
+            flex-direction: column;
+            color: #1e321e;
+        }
+        .panel-title {
+            font-size: 1.3rem;
+            color: #ffefb0;
+            margin-bottom: 20px;
+            background: #457545;
+            padding: 8px 15px;
+            border-radius: 30px;
+            text-align: center;
+            border: 2px solid #a58f54;
+        }
+        .p2-right .panel-title {
+            background: transparent;
+            color: #1e321e;
+            border: none;
+            border-bottom: 2px solid #5e794b;
+            border-radius: 0;
+            padding: 0 0 10px 0;
+            text-align: left;
+            font-size: 1.4rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* --- 生物线索按钮 --- */
+        .clues-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-content: flex-start;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .big-clue-card {
+            background: #c9c07c;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 3px solid #5a4a2b;
+            box-shadow: 0 4px 0 #37523b;
+            cursor: pointer;
+            transition: 0.1s;
+            color: #1f3f1f;
+        }
+        .big-clue-card:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        /* --- 实验室功能区 --- */
+        .food-input-area {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .food-input-area input {
+            flex: 1;
+            background: #fdf5da;
+            border: 3px solid #5f7443;
+            border-radius: 30px;
+            padding: 12px 15px;
+            font-size: 1rem;
+        }
+        .food-input-area button {
+            background: #27845a;
+            border: none;
+            border-radius: 30px;
+            padding: 0 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            border: 2px solid #1e5a39;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #154d2e;
+        }
+        .food-input-area button:active { transform: translateY(4px); box-shadow: none; }
+        
+        .bio-cards {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .clue-card {
+            background: #efebcf;
+            color: #142013;
+            border-radius: 30px;
+            padding: 8px 15px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border: 2px solid #7b623b;
+            box-shadow: 0 3px 0 #4b5f3a;
+            cursor: pointer;
+            transition: 0.1s linear;
+            user-select: none;
+        }
+        .clue-card:active { transform: translateY(3px); box-shadow: none; }
+        
+        .ai-feedback {
+            background: #1f3823;
+            border-radius: 20px;
+            padding: 12px 15px;
+            color: #eeeaca;
+            border: 2px solid #aa9a60;
+            font-size: 0.95rem;
+            text-align: center;
+        }
+
+        /* --- 第3页面：推理与真相 --- */
+        .horizontal-clues {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .clue-column {
+            flex: 1 1 200px;
+            background: #1e2c1c;
+            border-radius: 25px;
+            padding: 12px 10px;
+            border: 4px solid #7c9467;
+            box-shadow: inset 0 0 0 2px #b8af7a, 4px 4px 0 #192614;
+        }
+        .column-title {
+            font-size: 1.1rem;
+            background: #2f452f;
+            display: inline-block;
+            padding: 3px 16px;
+            border-radius: 30px;
+            border: 2px solid #c9bc7a;
+            color: #f7efcb;
+            margin-bottom: 10px;
+        }
+
+        .clue-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 40px;
+        }
+        .clue-card[draggable=true] {
+            cursor: grab;
+            font-size: 0.8rem;
+            padding: 5px 10px;
+        }
+        .clue-card[draggable=true]:active {
+            cursor: grabbing;
+        }
+
+        /* 第三层内的滑块 */
+        .slider-zone {
+            margin: 10px 0 5px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: #1f3b27;
+            padding: 6px 10px;
+            border-radius: 40px;
+        }
+        .env-badge {
+            background: #356235;
+            padding: 3px 10px;
+            border-radius: 30px;
+            color: #fbefc7;
+            border: 2px solid #b8a166;
+            font-size: 0.7rem;
+        }
+        .slider-zone input { flex:2; height: 5px; }
+
+        /* ----- 中部槽位区域 ----- */
+        .slot-area {
+            background: #2b442b;
+            border-radius: 30px;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            border: 2px solid #dbb679;
+        }
+        .slot-container {
+            display: flex;
+            gap: 8px;
+            flex: 3 1 300px;
+            flex-wrap: wrap;
+        }
+        .slot {
+            background: #5a5a3a;
+            border-radius: 30px;
+            padding: 5px 10px;
+            color: #ffefcf;
+            border: 2px dashed #cfa668;
+            min-width: 90px;
+            text-align: center;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            justify-content: center;
+            flex: 1 1 auto;
+        }
+        .slot i { color: #f0cf8f; font-size: 0.7rem; }
+        .btn-link {
+            background: #b88542;
+            border: none;
+            border-radius: 40px;
+            padding: 6px 14px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            border: 2px solid #6e502e;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #514024;
+            transition: 0.05s;
+            color: #141c0e;
+        }
+        .btn-link:active { transform: translateY(3px); box-shadow: none; }
+        .btn-clear { background: #6f4e3a; margin-left: 5px; }
+
+        /* ----- 底部双栏 (推理左, 真相右) ----- */
+        .bottom-duo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 5px;
+            flex: 1;
+        }
+        .left-panel {
+            background: #1e2c1c;
+            border-radius: 25px;
+            padding: 12px;
+            border: 4px solid #7c9467;
+            box-shadow: inset 0 0 0 2px #b8af7a, 4px 4px 0 #192614;
+            display: flex;
+            flex-direction: column;
+        }
+        .right-panel {
+            background: #2b3627;
+            border-radius: 25px;
+            padding: 12px;
+            border: 4px solid #9d946b;
+            box-shadow: inset 0 0 0 2px #e6dbb6;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+        }
+
+        /* 推理层 */
+        .inference-log {
+            background: #142014;
+            border-radius: 16px;
+            padding: 8px;
+            border: 2px solid #6b824b;
+            color: #dccfa2;
+            margin-top: 10px;
+            font-size: 0.7rem;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .truth-locked {
+            background: #734532;
+            border-radius: 30px;
+            padding: 6px 18px;
+            color: #ffdba5;
+            font-weight: bold;
+            border: 2px solid #b38b47;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+        .truth-unlocked { background: #dbb152; color: #1a2a0e; border-color: #f9e838; }
+        .foodweb-display {
+            background: #1d3a1d;
+            border-radius: 20px;
+            padding: 8px;
+            margin-top: 8px;
+            border: 3px solid #b8a654;
+            display: none;
+            text-align: center;
+        }
+        .foodweb-display.visible { display: block; }
+        .foodweb-svg {
+            max-width: 100%;
+            height: auto;
+            background: #2e572e;
+            border-radius: 12px;
+        }
+        .footer-note {
+            margin-top: 12px;
+            color: #b8ad82;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+        }
+        .locked-layer {
+            background: #4b5440;
+            border-color: #7b7b5a;
+            color: #2b2b1a;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        /* --- 弹窗样式 --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay-bg);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 80%;
+            text-align: center;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-card {
+            transform: translateY(0);
+        }
+        .modal-card h2 {
+            margin-top: 0;
+            color: var(--accent-color);
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .modal-card p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #333;
+            margin-top: 15px;
+        }
+        .close-btn {
+            margin-top: 25px;
+            padding: 10px 25px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .close-btn:hover { background: #3e2723; }
+
+        /* --- 移动端响应式优化 --- */
+        @media (max-width: 768px) {
+            body, html { overflow: auto; }
+            .page.active {
+                justify-content: flex-start;
+                padding-top: 60px;
+                padding-bottom: 20px;
+                height: auto;
+                min-height: 100vh;
+            }
+            .next-page-btn, .back-to-scene-btn {
+                top: 10px;
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+            .next-page-btn { right: 10px; }
+            .back-to-scene-btn { left: 10px; }
+            
+            .game-container-p1 {
+                width: 100%;
+                height: 56.25vw;
+                margin-top: 20px;
+            }
+            .hint::after {
+                content: " (建议横屏体验更佳)";
+            }
+
+            .page-container {
+                height: auto;
+                min-height: calc(100vh - 80px);
+                margin: 0 10px;
+                padding: 15px;
+                border-width: 2px;
+                border-radius: 15px;
+            }
+
+            .header-det {
+                flex-direction: column;
+                gap: 5px;
+                padding: 8px 10px;
+                text-align: center;
+            }
+            .header-det > div {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .header-det h1 { font-size: 1.2rem; }
+            .header-det i { font-size: 1.5rem !important; }
+
+            .p2-layout { flex-direction: column; }
+            .p2-left, .p2-right { padding: 12px; border-width: 2px; }
+            
+            .food-input-area { flex-direction: column; }
+            .food-input-area input { font-size: 0.9rem; padding: 10px; }
+            .food-input-area button { padding: 10px; width: 100%; }
+            
+            .horizontal-clues { flex-direction: column; }
+            
+            .slot-area { flex-direction: column; align-items: stretch; }
+            .slot-container { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+            .slot-area > div:last-child { justify-content: center; margin-top: 10px; }
+            
+            .bottom-duo { grid-template-columns: 1fr; }
+            
+            .left-panel, .right-panel { padding: 10px; border-width: 2px; }
+            .clue-card { font-size: 0.8rem; padding: 6px 10px; }
+            
+            .foodweb-svg { width: 100%; height: auto; }
+            .modal-card { width: 90%; padding: 20px; }
+            .modal-card p { font-size: 1rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- 第一页面：场景探索 -->
+    <div id="page1" class="page active">
+        <button class="next-page-btn" onclick="goToPage(2)">继续推理 <i class="fas fa-arrow-right"></i></button>
+        <div class="game-container-p1">
+            <div class="hotspot" id="spot-snake" data-title="线索卡" data-info="水蛇蜕下的皮，位置：浅水区岸边"></div>
+            <div class="hotspot" id="spot-dragonfly" data-title="线索卡" data-info="蜻蜓幼虫蜕皮，位置：水面漂浮"></div>
+            <div class="hotspot" id="spot-fish-scale" data-title="线索卡" data-info="大鱼鳞片，位置：浅水区水底"></div>
+            <div class="hotspot" id="spot-feather" data-title="线索卡" data-info="苍鹭羽毛，位置：岸边草丛"></div>
+            <div class="hotspot" id="spot-snail" data-title="线索卡" data-info="田螺：长期在水底石缝，刮食藻类、有机碎屑。"></div>
+            <div class="hotspot" id="spot-report" data-title="线索卡" data-info="化验单：小蝌蚪胃里有未消化的藻类（无毒）。"></div>
+            <div class="hint">点击场景中的物品寻找线索</div>
+        </div>
+    </div>
+
+    <!-- 第二页面：线索分析与食物链实验室 -->
+    <div id="page2" class="page">
+        <div class="page-container">
+            <!-- 返回案发现场按钮 -->
+            <button class="back-to-scene-btn" onclick="goToPage(1)"><i class="fas fa-arrow-left"></i> 案发现场</button>
+            <button class="next-page-btn" onclick="goToPage(3)">继续推理 <i class="fas fa-arrow-right"></i></button>
+            
+            <div class="header-det">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-search" style="font-size: 2rem; color:#ceb27b;"></i>
+                    <h1>第二阶段：线索分析与食物链</h1>
+                </div>
+            </div>
+
+            <div class="p2-layout">
+                <!-- 左侧：生物线索 (新增蝌蚪尸体) -->
+                <div class="p2-left">
+                    <div class="panel-title"><i class="fas fa-paw"></i> 所有的生物线索</div>
+                    <div class="clues-container" id="p2-clues-container">
+                        <!-- 动态渲染线索卡片 (包含蝌蚪尸体) -->
+                    </div>
+                </div>
+
+                <!-- 右侧：食物链实验室 (角色: 藻类、水草、小蝌蚪、蜻蜓幼虫、田螺、大鱼、水蛇、苍鹭) -->
+                <div class="p2-right">
+                    <div class="panel-title"><i class="fas fa-dna"></i> 食物链实验室</div>
+                    
+                    <div class="food-input-area">
+                        <input type="text" id="foodInput" value="藻类 → 小蝌蚪 → 蜻蜓幼虫" placeholder="生产者 → 消费者 (按实际捕食关系)">
+                        <button id="checkFoodBtn"><i class="fas fa-check"></i> 检查</button>
+                    </div>
+                    
+                    <!-- 生物卡片 -->
+                    <div class="bio-cards">
+                        <span class="clue-card" onclick="insertBio('藻类')">藻类🌿</span>
+                        <span class="clue-card" onclick="insertBio('水草')">水草🌱</span>
+                        <span class="clue-card" onclick="insertBio('小蝌蚪')">小蝌蚪🐸</span>
+                        <span class="clue-card" onclick="insertBio('蜻蜓幼虫')">蜻蜓幼虫🐛</span>
+                        <span class="clue-card" onclick="insertBio('田螺')">田螺🐚</span>
+                        <span class="clue-card" onclick="insertBio('大鱼')">大鱼🐟</span>
+                        <span class="clue-card" onclick="insertBio('水蛇')">水蛇🐍</span>
+                        <span class="clue-card" onclick="insertBio('苍鹭')">苍鹭🕊️</span>
+                    </div>
+                    
+                    <div class="ai-feedback" id="foodAIFeedback">
+                        <i class="fas fa-robot"></i> 等待输入食物链（检查实际捕食关系）
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第三页面：推理与真相 (保持不变) -->
+    <div id="page3" class="page">
+        <div class="page-container">
+            <button class="next-page-btn" onclick="goToPage(2)"><i class="fas fa-arrow-left"></i> 返回</button>
+            <div class="header-det">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-lock" style="font-size: 2rem; color:#ceb27b;"></i>
+                    <h1>第三阶段：真相还原</h1>
+                </div>
+            </div>
+            
+            <div class="horizontal-clues">
+                <!-- 第一层 · 物证 -->
+                <div class="clue-column">
+                    <div class="column-title"><i class="fas fa-fingerprint"></i> 物证</div>
+                    <div class="clue-grid" id="layer1"></div>
+                </div>
+        
+                <!-- 第二层 · 口供 -->
+                <div class="clue-column">
+                    <div class="column-title"><i class="fas fa-comment-dots"></i> 口供</div>
+                    <div class="clue-grid" id="layer2"></div>
+                </div>
+        
+                <!-- 第三层 · 环境 (带滑块) -->
+                <div class="clue-column">
+                    <div class="column-title"><i class="fas fa-water"></i> 环境</div>
+                    <div class="clue-grid" id="layer3"></div>
+                    <!-- 水位滑动条（氛围） -->
+                    <div class="slider-zone">
+                        <i class="fas fa-calendar-alt" style="color:#ffe1a0;"></i>
+                        <span style="color:#e9dba7; font-size:0.7rem;">连续高温</span>
+                        <input type="range" min="0" max="100" value="80" id="dateSlider">
+                        <span id="dateLabel" class="env-badge">第8天 ↓1/3</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中部槽位区域 (拖拽组合) -->
+            <div class="slot-area">
+                <div style="color:#fcefc1; font-size:0.8rem;">拖拽到槽位组合：</div>
+                <div class="slot-container">
+                    <div class="slot" id="slot0" data-index="0"><i class="fas fa-plus-circle"></i> 空</div>
+                    <div class="slot" id="slot1" data-index="1"><i class="fas fa-plus-circle"></i> 空</div>
+                    <div class="slot" id="slot2" data-index="2"><i class="fas fa-plus-circle"></i> 空</div>
+                    <div class="slot" id="slot3" data-index="3"><i class="fas fa-plus-circle"></i> 空</div>
+                </div>
+                <div style="display: flex; gap:6px;">
+                    <button class="btn-link" id="associateBtn"><i class="fas fa-link"></i> 组合</button>
+                    <button class="btn-link btn-clear" id="clearSlotsBtn">清空</button>
+                </div>
+            </div>
+
+            <!-- 底部双栏：左下推理，右下真相 -->
+            <div class="bottom-duo">
+                <!-- 左侧推理面板 -->
+                <div class="left-panel">
+                    <div class="column-title" style="margin-bottom: 8px;"><i class="fas fa-brain"></i> 第四层 · 推理线索</div>
+                    <div class="clue-grid" id="layer4"></div>
+                    <div class="inference-log" id="inferenceLog">
+                        <div style="color:#bdb27a;">🔍 推理线索将出现在上方</div>
+                    </div>
+                </div>
+        
+                <!-- 右侧真相面板 -->
+                <div class="right-panel">
+                    <div id="truthLayerBlock" style="margin-bottom: 8px;">
+                        <div class="column-title" style="margin-bottom: 5px;"><i class="fas fa-lock"></i> 第五层 · 真相</div>
+                        <div class="clue-grid" id="layer5"></div>
+                    </div>
+
+                    <div id="foodWebDisplay" class="foodweb-display">
+                        <svg class="foodweb-svg" width="320" height="130" viewBox="0 0 320 130" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="320" height="130" fill="#2b572b" rx="12" ry="12" />
+                            <text x="25" y="22" fill="#f9f2b0" font-size="9">🌿藻类</text>
+                            <text x="100" y="22" fill="#f9f2b0" font-size="9">🌱水草</text>
+                            <line x1="50" y1="27" x2="50" y2="45" stroke="#f0d080" stroke-width="2" marker-end="url(#arrow)"/>
+                            <line x1="115" y1="27" x2="115" y2="45" stroke="#f0d080" stroke-width="2" marker-end="url(#arrow)"/>
+                            <text x="15" y="65" fill="#f9d48b" font-size="8">🐸小蝌蚪</text>
+                            <text x="95" y="65" fill="#f9d48b" font-size="8">🦐水蚤</text>
+                            <text x="175" y="65" fill="#f9d48b" font-size="8">🐚田螺</text>
+                            <line x1="35" y1="68" x2="55" y2="92" stroke="#f0d080" stroke-width="2" marker-end="url(#arrow)"/>
+                            <line x1="115" y1="68" x2="100" y2="92" stroke="#f0d080" stroke-width="2" marker-end="url(#arrow)"/>
+                            <line x1="190" y1="68" x2="190" y2="92" stroke="#f0d080" stroke-width="2" marker-end="url(#arrow)"/>
+                            <text x="45" y="108" fill="#f9b83a" font-size="8">🐛蜻蜓幼虫</text>
+                            <text x="150" y="108" fill="#f9b83a" font-size="8">🐟大鱼</text>
+                            <text x="235" y="108" fill="#f9b83a" font-size="8">🐍水蛇</text>
+                            <line x1="80" y1="112" x2="135" y2="112" stroke="#f0d080" stroke-width="2" marker-end="url(#arrow)"/>
+                            <line x1="200" y1="112" x2="240" y2="112" stroke="#f0d080" stroke-width="2" marker-end="url(#arrow)"/>
+                            <defs><marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#f0d080"/></marker></defs>
+                            <text x="20" y="15" fill="#fff3b5" font-size="6">食物网</text>
+                        </svg>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; margin-top: auto;">
+                        <div id="unlockTruthBtn" class="truth-locked"><i class="fas fa-key"></i> 揭示真相</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 页脚提示 -->
+            <div class="footer-note">
+                <span><i class="fas fa-lightbulb"></i> 单击卡片查看详情，拖拽组合</span>
+                <span><i class="fas fa-arrow-right"></i> 3推理 或 1环境+2推理 解锁真相</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-card">
+            <h2 id="modalTitle">找到线索！</h2>
+            <p id="modalContent"></p>
+            <button class="close-btn" onclick="closeModal()">收起</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 页面切换逻辑 ---
+        function goToPage(pageNum) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page' + pageNum).classList.add('active');
+        }
+
+        // --- 弹窗逻辑 ---
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
+
+        function showModal(title, content) {
+            modalTitle.innerText = title;
+            modalContent.innerText = content;
+            modalOverlay.classList.add('active');
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+        }
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        // --- 第1页面热点点击 ---
+        const hotspots = document.querySelectorAll('.hotspot');
+        hotspots.forEach(spot => {
+            spot.addEventListener('click', () => {
+                const title = spot.getAttribute('data-title');
+                const info = spot.getAttribute('data-info');
+                showModal(title, info);
+            });
+        });
+
+        // --- 第2页面：生物线索数据渲染 (包含蝌蚪尸体) ---
+        const p2Clues = [
+            { name: '蛇蜕', desc: '水蛇蜕下的皮，位于浅水区岸边。', icon: 'fa-paw' },
+            { name: '蜻蜓蜕皮', desc: '蜻蜓幼虫蜕皮，漂浮水面。', icon: 'fa-bug' },
+            { name: '鱼鳞', desc: '大鱼鳞片，浅水区水底。', icon: 'fa-fish' },
+            { name: '苍鹭羽毛', desc: '苍鹭羽毛，岸边草丛。', icon: 'fa-feather' },
+            { name: '蝌蚪胃容物', desc: '未消化的藻类。', icon: 'fa-dna' },
+            { name: '水蛇口供', desc: '我在池塘对岸活动，主要吃青蛙。', icon: 'fa-snake' },
+            { name: '蜻蜓幼虫口供', desc: '我常在水底活动，吃蝌蚪、水蚤。', icon: 'fa-locust' },
+            { name: '大鱼口供', desc: '我在深水区，很少到浅水。', icon: 'fa-fish' },
+            { name: '苍鹭口供', desc: '我已飞往北边湿地，不吃蝌蚪。', icon: 'fa-dove' },
+            { name: '蝌蚪尸体', desc: '部分残缺，部分完整，位于浅水区岸边。', icon: 'fa-dna' }  // 新增
+        ];
+
+        const cluesContainer = document.getElementById('p2-clues-container');
+        p2Clues.forEach(clue => {
+            const el = document.createElement('div');
+            el.className = 'big-clue-card';
+            el.innerHTML = `<i class="fas ${clue.icon}"></i> ${clue.name}`;
+            el.addEventListener('click', () => {
+                showModal('🔍 ' + clue.name, clue.desc);
+            });
+            cluesContainer.appendChild(el);
+        });
+
+        // --- 第2页面：食物链实验室逻辑 (基于实际捕食关系) ---
+        window.insertBio = function(bio) {
+            let inp = document.getElementById('foodInput');
+            inp.value += (inp.value ? ' → ' + bio : bio);
+        };
+
+        // 定义捕食关系: 捕食者 -> 它可以吃的猎物列表
+        const predatorDiet = {
+            '小蝌蚪': ['藻类', '水草'],
+            '田螺':   ['藻类', '水草'],
+            '蜻蜓幼虫': ['小蝌蚪'],          // 蜻蜓幼虫吃小蝌蚪（常见，也符合口供）
+            '大鱼':    ['小蝌蚪', '蜻蜓幼虫'], // 补充：大鱼吃蜻蜓幼虫（合理，也可吃田螺？但暂不加）
+            '水蛇':    ['小蝌蚪', '大鱼', '蜻蜓幼虫'], // 水蛇吃小蝌蚪、大鱼，也补充吃蜻蜓幼虫
+            '苍鹭':    ['大鱼', '水蛇', '田螺']       // 苍鹭吃大鱼、水蛇、田螺（用户描述）
+        };
+
+        // 辅助清理生物名称（去掉图标符号）
+        function cleanBioName(raw) {
+            // 只保留中文和英文字母
+            return raw.replace(/[^\u4e00-\u9fa5a-zA-Z]/g, ''); 
+        }
+
+        document.getElementById('checkFoodBtn').addEventListener('click', function() {
+            let chain = document.getElementById('foodInput').value.trim();
+            let parts = chain.split(/→|->/).map(s => s.trim()).filter(s => s.length > 0);
+            let feedback = document.getElementById('foodAIFeedback');
+            
+            // 默认错误背景
+            feedback.style.background = '#8f5252';
+
+            // 1. 至少两个环节
+            if (parts.length < 2) {
+                feedback.innerHTML = '<i class="fas fa-robot"></i> 至少需要两个环节（生产者 → 消费者）';
+                document.getElementById('foodInput').value = '';  // 自动清空
+                return;
+            }
+
+            // 清洗每个环节，得到干净名称列表
+            let cleanParts = parts.map(p => cleanBioName(p));
+            
+            // 检查第一个是否为生产者（藻类或水草）
+            const producers = ['藻类', '水草'];
+            if (!producers.includes(cleanParts[0])) {
+                feedback.innerHTML = '<i class="fas fa-robot"></i> 食物链必须以生产者（藻类/水草）开头';
+                document.getElementById('foodInput').value = '';
+                return;
+            }
+
+            // 逐一检查相邻捕食关系
+            let valid = true;
+            let errorMsg = '';
+            for (let i = 0; i < cleanParts.length - 1; i++) {
+                const prey = cleanParts[i];       // 被吃者
+                const predator = cleanParts[i+1]; // 捕食者
+
+                // 检查捕食者是否在predatorDiet中
+                if (!predatorDiet[predator]) {
+                    valid = false;
+                    errorMsg = `“${predator}”不是已知的捕食者，或它不吃任何生物`;
+                    break;
+                }
+                // 检查捕食者是否喜欢吃这个猎物
+                if (!predatorDiet[predator].includes(prey)) {
+                    valid = false;
+                    errorMsg = `⛔ ${predator} 不吃 ${prey}，不符合捕食关系`;
+                    break;
+                }
+            }
+
+            if (!valid) {
+                feedback.innerHTML = `<i class="fas fa-robot"></i> ${errorMsg}`;
+            } else {
+                feedback.innerHTML = '<i class="fas fa-robot"></i> ✓ 食物链符合实际捕食关系！正在同步至教师端...';
+                feedback.style.background = '#1f5c3a';
+
+                // --- 新增：同步到教师端 ---
+                // 使用相对路径以便在 Cloudflare Pages 中运行
+                const apiUrl = '/api/chains'; 
+                
+                fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentName: "学生A", // 实际项目中可动态获取
+                        foodChain: cleanParts
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    feedback.innerHTML = '<i class="fas fa-robot"></i> ✓ 食物链正确，已同步至教师端！';
+                })
+                .catch(err => {
+                    console.error('同步失败:', err);
+                    feedback.innerHTML = '<i class="fas fa-robot"></i> ✓ 食物链正确（同步失败，请检查网络）';
+                });
+            }
+
+            // 自动清空输入框，方便下一条
+            document.getElementById('foodInput').value = '';
+        });
+
+        // --- 第3页面：逻辑与交互 (完全保留原有) ---
+        const clues = {
+            layer1: [
+                { id: 'snakeShed', name: '蛇蜕', desc: '水蛇蜕下的皮，位于浅水区岸边。', icon: 'fa-paw' },
+                { id: 'dragonShed', name: '蜻蜓蜕皮', desc: '蜻蜓幼虫蜕皮，漂浮水面。', icon: 'fa-bug' },
+                { id: 'fishScale', name: '鱼鳞', desc: '大鱼鳞片，浅水区水底。', icon: 'fa-fish' },
+                { id: 'heronFeather', name: '苍鹭羽毛', desc: '苍鹭羽毛，岸边草丛。', icon: 'fa-feather' },
+                { id: 'tadpoleStomach', name: '小蝌蚪胃内容物', desc: '未消化的藻类。', icon: 'fa-dna' }
+            ],
+            layer2: [
+                { id: 'snakeTest', name: '水蛇口供', desc: '我在池塘对岸活动，主要吃青蛙。', icon: 'fa-snake' },
+                { id: 'dragonTest', name: '蜻蜓幼虫口供', desc: '我常在水底活动，吃蝌蚪、水蚤。', icon: 'fa-locust' },
+                { id: 'fishTest', name: '大鱼口供', desc: '我在深水区，很少到浅水。', icon: 'fa-fish' },
+                { id: 'heronTest', name: '苍鹭口供', desc: '我已飞往北边湿地，不吃蝌蚪。', icon: 'fa-dove' },
+                { id: 'plantTest', name: '植物证词', desc: '水藻、水草：这几天水温高，疯长又腐烂。', icon: 'fa-leaf' }
+            ],
+            layer3: [
+                { id: 'waterLevel', name: '水位数据', desc: '连续高温一周，水位下降1/3，浅水区缩窄。', icon: 'fa-chart-line' },
+                { id: 'waterTemp', name: '水温变化', desc: '浅水区水温升高3℃，深水区变化小。', icon: 'fa-thermometer-half' },
+                { id: 'algaeStatus', name: '水藻状况', desc: '先大量繁殖，后因高温腐烂，水质恶化。', icon: 'fa-seedling' },
+                { id: 'snailWitness', name: '田螺证词', desc: '我趴在石头上，水变浅阳光直射，藻类腐烂，蜻蜓幼虫常在附近，我们数量减少。', icon: 'fa-shell' }
+            ]
+        };
+
+        const multiRules = [
+            { group: ['snakeTest', 'snakeShed'], result: '水蛇近期主要捕食青蛙成虫，蝌蚪非主要目标' },
+            { group: ['dragonTest', 'dragonShed', 'waterTemp'], result: '蜻蜓幼虫虽吃蝌蚪，但为缓慢捕食，不符突然大量死亡' },
+            { group: ['fishTest', 'fishScale', 'waterLevel'], result: '水位下降后大鱼无法进入浅水区' },
+            { group: ['heronTest', 'heronFeather'], result: '苍鹭不吃蝌蚪，排除' },
+            { group: ['tadpoleStomach', 'algaeStatus', 'waterTemp', 'snailWitness'], result: '小蝌蚪食物不足+体质变弱' }
+        ];
+
+        let inferenceItems = [];
+        let truthUnlocked = false;
+        let slots = [null, null, null, null];
+
+        function renderLayer(containerId, items, type, layerNum) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'clue-card';
+                card.draggable = true;
+                card.style.cursor = 'grab';
+                card.dataset.id = item.id;
+                card.dataset.name = item.name;
+                card.dataset.desc = item.desc;
+                card.dataset.icon = item.icon;
+                card.dataset.type = type;
+                card.dataset.layer = layerNum;
+                card.title = item.desc;
+                card.innerHTML = `<i class="fas ${item.icon}"></i> ${item.name}`;
+                card.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showModal('🔍 ' + item.name, item.desc);
+                });
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('touchstart', handleTouchStart, {passive: false});
+                card.addEventListener('touchmove', handleTouchMove, {passive: false});
+                card.addEventListener('touchend', handleTouchEnd);
+                container.appendChild(card);
+            });
+        }
+
+        function renderInferenceLayer() {
+            const container = document.getElementById('layer4');
+            if (!container) return;
+            container.innerHTML = '';
+            if (inferenceItems.length === 0) {
+                container.innerHTML = '<div class="clue-card locked-layer" style="cursor:default">暂无推理，请组合线索</div>';
+                return;
+            }
+            inferenceItems.forEach(inf => {
+                const card = document.createElement('div');
+                card.className = 'clue-card';
+                card.style.background = '#b8b07c';
+                card.style.borderColor = '#4d6b3b';
+                card.draggable = true;
+                card.style.cursor = 'grab';
+                card.dataset.id = inf.id;
+                card.dataset.name = inf.text.substring(0, 14) + '…';
+                card.dataset.desc = inf.text;
+                card.dataset.icon = 'fa-brain';
+                card.dataset.type = 'inference';
+                card.dataset.layer = 4; 
+                card.title = inf.text;
+                card.innerHTML = `<i class="fas fa-brain"></i> ${inf.text.substring(0, 12)}…`;
+                card.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showModal('🔍 推理线索', inf.text);
+                });
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('touchstart', handleTouchStart, {passive: false});
+                card.addEventListener('touchmove', handleTouchMove, {passive: false});
+                card.addEventListener('touchend', handleTouchEnd);
+                container.appendChild(card);
+            });
+        }
+
+        // Touch drag logic (保持不变)
+        let draggedItemData = null;
+        let ghostElement = null;
+
+        function handleTouchStart(e) {
+            const card = e.target.closest('.clue-card');
+            if (!card || card.classList.contains('locked-layer')) return;
+            e.preventDefault();
+            const id = card.dataset.id;
+            const type = card.dataset.type;
+            const name = card.dataset.name;
+            const icon = card.dataset.icon;
+            const desc = card.dataset.desc;
+            const layer = card.dataset.layer; 
+            draggedItemData = { id, type, name, icon, desc, layer: layer ? parseInt(layer) : undefined };
+            ghostElement = card.cloneNode(true);
+            ghostElement.style.position = 'fixed';
+            ghostElement.style.zIndex = '1000';
+            ghostElement.style.opacity = '0.8';
+            ghostElement.style.pointerEvents = 'none';
+            const touch = e.touches[0];
+            ghostElement.style.left = (touch.clientX - card.offsetWidth / 2) + 'px';
+            ghostElement.style.top = (touch.clientY - card.offsetHeight / 2) + 'px';
+            document.body.appendChild(ghostElement);
+        }
+
+        function handleTouchMove(e) {
+            if (!ghostElement) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            ghostElement.style.left = (touch.clientX - ghostElement.offsetWidth / 2) + 'px';
+            ghostElement.style.top = (touch.clientY - ghostElement.offsetHeight / 2) + 'px';
+        }
+
+        function handleTouchEnd(e) {
+            if (!ghostElement || !draggedItemData) return;
+            const touch = e.changedTouches[0];
+            ghostElement.style.display = 'none';
+            const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+            const slot = elementUnderTouch ? elementUnderTouch.closest('.slot') : null;
+            if (slot) {
+                const slotIndex = parseInt(slot.dataset.index);
+                slots[slotIndex] = draggedItemData;
+                updateSlotUI();
+            }
+            if (ghostElement && ghostElement.parentNode) {
+                ghostElement.parentNode.removeChild(ghostElement);
+            }
+            ghostElement = null;
+            draggedItemData = null;
+        }
+
+        function renderTruthLayer() {
+            const layer5 = document.getElementById('layer5');
+            if (!layer5) return;
+            if (truthUnlocked) {
+                layer5.innerHTML = '';
+                const truthCard = document.createElement('div');
+                truthCard.className = 'clue-card';
+                truthCard.style.background = '#e9d67a';
+                truthCard.style.color = '#0a1f0a';
+                truthCard.title = '最终真相：环境改变引发的食物网崩溃。';
+                truthCard.innerHTML = '<i class="fas fa-check-circle"></i> 真相：环境改变→水藻腐烂→食物网失衡';
+                truthCard.addEventListener('click', () => showModal('揭示真相', '最终真相：没有单一凶手，是环境改变引发的食物网崩溃。'));
+                layer5.appendChild(truthCard);
+                document.getElementById('unlockTruthBtn').innerHTML = '<i class="fas fa-unlock-alt"></i> 真相已揭示';
+                document.getElementById('unlockTruthBtn').classList.add('truth-unlocked');
+                document.getElementById('foodWebDisplay').classList.add('visible');
+            } else {
+                layer5.innerHTML = '<div class="clue-card locked-layer" style="cursor:default"><i class="fas fa-lock"></i> 需组合解锁</div>';
+                document.getElementById('foodWebDisplay').classList.remove('visible');
+                document.getElementById('unlockTruthBtn').innerHTML = '<i class="fas fa-key"></i> 揭示真相';
+                document.getElementById('unlockTruthBtn').classList.remove('truth-unlocked');
+            }
+        }
+
+        function handleDragStart(e) {
+            const card = e.target.closest('.clue-card');
+            if (!card) return;
+            const id = card.dataset.id;
+            const type = card.dataset.type;
+            const name = card.dataset.name;
+            const icon = card.dataset.icon;
+            const desc = card.dataset.desc;
+            const layer = card.dataset.layer; 
+            e.dataTransfer.setData('text/plain', JSON.stringify({ id, type, name, icon, desc, layer: layer ? parseInt(layer) : undefined }));
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function initSlots() {
+            for (let i = 0; i < 4; i++) {
+                const slot = document.getElementById(`slot${i}`);
+                slot.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                });
+                slot.addEventListener('dragenter', e => e.preventDefault());
+                slot.addEventListener('drop', e => {
+                    e.preventDefault();
+                    const rawData = e.dataTransfer.getData('text/plain');
+                    if (!rawData) return;
+                    const data = JSON.parse(rawData);
+                    slots[parseInt(slot.dataset.index)] = { 
+                        id: data.id, 
+                        name: data.name, 
+                        icon: data.icon, 
+                        type: data.type, 
+                        desc: data.desc,
+                        layer: data.layer  
+                    };
+                    updateSlotUI();
+                });
+            }
+        }
+
+        function updateSlotUI() {
+            for (let i = 0; i < 4; i++) {
+                const slot = document.getElementById(`slot${i}`);
+                slot.innerHTML = slots[i] ? `<i class="fas ${slots[i].icon}"></i> ${slots[i].name}` : '<i class="fas fa-plus-circle"></i> 空';
+            }
+        }
+
+        function clearSlots() { slots = [null, null, null, null]; updateSlotUI(); }
+
+        function combine() {
+            const filled = slots.filter(s => s !== null);
+            if (filled.length === 0) { showModal('提示', '槽位是空的，请先拖入线索'); return; }
+
+            const inferenceCount = filled.filter(s => s.type === 'inference').length;
+            const envCount = filled.filter(s => s.type === 'clue' && s.layer === 3).length;
+
+            if (!truthUnlocked) {
+                if (inferenceCount >= 3) {
+                    truthUnlocked = true;
+                    renderTruthLayer();
+                    clearSlots();
+                    showModal('解锁成功', '🔓 通过组合三条推理线索，真相解锁！环境改变引发的食物网失衡！');
+                    return;
+                }
+                if (envCount >= 1 && inferenceCount >= 2) {
+                    truthUnlocked = true;
+                    renderTruthLayer();
+                    clearSlots();
+                    showModal('解锁成功', '🔓 通过环境+推理线索组合，真相解锁！环境改变引发的食物网失衡！');
+                    return;
+                }
+            } else {
+                showModal('提示', '真相已解锁，无需重复组合');
+                clearSlots();
+                return;
+            }
+
+            const clueSlots = filled.filter(s => s.type === 'clue');
+            if (clueSlots.length < 2) {
+                showModal('提示', '当前组合无法解锁真相，也至少需要两个原始线索才能生成推理');
+                return;
+            }
+
+            const clueIds = clueSlots.map(s => s.id);
+            let addedAny = false;
+            for (let rule of multiRules) {
+                const intersection = clueIds.filter(id => rule.group.includes(id));
+                if (intersection.length >= 2 && !inferenceItems.some(item => item.text === rule.result)) {
+                    inferenceItems.push({ id: 'inf_' + Date.now() + Math.random(), text: rule.result });
+                    addedAny = true;
+                }
+            }
+            if (addedAny) {
+                renderInferenceLayer();
+                clearSlots();
+                showModal('新线索', '生成了新的推理线索！请查看下方推理面板。');
+            } else {
+                showModal('提示', '当前组合无法生成新推理，请尝试其他线索');
+            }
+        }
+
+        function attemptUnlock() {
+            if (truthUnlocked) showModal('真相', '最终真相：没有单一凶手，是环境改变引发的食物网崩溃。');
+            else showModal('提示', '请拖拽线索到槽位并点击“组合”来解锁真相：\n- 至少三个推理线索\n- 或至少一个环境线索+至少两个推理线索');
+        }
+
+        // Initialize P3
+        renderLayer('layer1', clues.layer1, 'clue', 1);
+        renderLayer('layer2', clues.layer2, 'clue', 2);
+        renderLayer('layer3', clues.layer3, 'clue', 3);
+        renderInferenceLayer();
+        renderTruthLayer();
+        initSlots();
+        updateSlotUI();
+
+        document.getElementById('associateBtn').addEventListener('click', combine);
+        document.getElementById('clearSlotsBtn').addEventListener('click', clearSlots);
+        document.getElementById('unlockTruthBtn').addEventListener('click', attemptUnlock);
+
+        // Slider for P3
+        const slider = document.getElementById('dateSlider');
+        const dateLabel = document.getElementById('dateLabel');
+        slider.addEventListener('input', function() {
+            let val = parseInt(slider.value);
+            if (val < 30) dateLabel.innerText = '第3天 略降';
+            else if (val < 60) dateLabel.innerText = '第5天 ↓1/4';
+            else dateLabel.innerText = '第8天 ↓1/3 +3℃';
+        });
+    </script>
+</body>
+</html>
