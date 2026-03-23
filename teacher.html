@@ -186,7 +186,10 @@
             }
         });
 
-        const API_URL = '/api/chains';
+        // 优先使用当前域名，如果在本地运行则指向部署后的地址
+        const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
+            ? 'https://food-chain-cloudflare.pages.dev/api/chains' 
+            : '/api/chains';
 
         // 核心更新逻辑
         async function fetchChains() {

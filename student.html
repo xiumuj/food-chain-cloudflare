@@ -945,8 +945,10 @@
                 feedback.style.background = '#1f5c3a';
 
                 // --- 新增：同步到教师端 ---
-                // 使用相对路径以便在 Cloudflare Pages 中运行
-                const apiUrl = '/api/chains'; 
+                // 优先使用当前域名，如果在本地运行则指向部署后的地址
+                const apiUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
+                    ? 'https://food-chain-cloudflare.pages.dev/api/chains' 
+                    : '/api/chains'; 
                 
                 fetch(apiUrl, {
                     method: 'POST',
