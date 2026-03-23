@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>池塘谜案 · 教师端数据汇总</title>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Cytoscape.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #1a2a1a;
+            --panel-bg: rgba(0, 0, 0, 0.4);
+            --accent-color: #ff9800;
+            --node-color: #4caf50;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg-color); font-family: sans-serif; }
+
+        #cy { width: 100%; height: 100%; background: #1a2a1a; }
+
+        /* --- 教师端控制面板 --- */
+        .admin-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            width: 300px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .admin-panel h1 { font-size: 1.2rem; margin-bottom: 10px; color: #ffeb3b; }
+        .admin-panel p { font-size: 0.85rem; color: #aaa; margin-bottom: 20px; line-height: 1.4; }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-item div:first-child { font-size: 1.5rem; font-weight: bold; color: var(--accent-color); }
+        .stat-item div:last-child { font-size: 0.7rem; color: #ccc; }
+
+        .log-container {
+            height: 200px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.8rem;
+        }
+        .log-item {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: #eee;
+        }
+        .log-item span { color: #888; margin-right: 5px; }
+
+        /* --- 按钮样式 --- */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .admin-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .btn-generate { background: #4caf50; color: white; }
+        .btn-generate:hover { background: #43a047; transform: scale(1.02); }
+        .btn-clear { background: #f44336; color: white; }
+        .btn-clear:hover { background: #e53935; transform: scale(1.02); }
+
+        /* --- 浮动提示 --- */
+        .status-badge {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,255,0,0.1);
+            color: #4caf50;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid #4caf50;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-badge .dot {
+            width: 8px; height: 8px; background: #4caf50; border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0.4; transform: scale(0.8); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-panel">
+        <h1><i class="fas fa-network-wired"></i> 全班食物网自动汇总</h1>
+        <p>学生提交正确的食物链后，系统将自动汇总并更新食物网图示。</p>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div id="count-students">0</div>
+                <div>提交人数</div>
+            </div>
+            <div class="stat-item">
+                <div id="count-chains">0</div>
+                <div>食物链数</div>
+            </div>
+        </div>
+
+        <div class="log-container" id="log-list">
+            <div class="log-item">等待学生数据同步...</div>
+        </div>
+
+        <div class="btn-group">
+            <button class="admin-btn btn-generate" onclick="generateWeb()">
+                <i class="fas fa-project-diagram"></i> 生成食物网
+            </button>
+            <button class="admin-btn btn-clear" onclick="clearData()">
+                <i class="fas fa-trash-alt"></i> 清除数据
+            </button>
+        </div>
+    </div>
+
+    <div id="cy"></div>
+
+    <div class="status-badge">
+        <div class="dot"></div>
+        <span>实时监听中...</span>
+    </div>
+
+    <script>
+        // 初始化 Cytoscape (初始为空)
+        const cy = cytoscape({
+            container: document.getElementById('cy'),
+            style: [
+                {
+                    selector: 'node',
+                    style: {
+                        'label': 'data(id)',
+                        'color': '#fff',
+                        'background-color': '#4caf50',
+                        'font-size': '12px',
+                        'text-valign': 'center',
+                        'text-halign': 'center',
+                        'width': '60px',
+                        'height': '60px',
+                        'border-width': 2,
+                        'border-color': '#fff'
+                    }
+                },
+                {
+                    selector: 'edge',
+                    style: {
+                        'width': 4,
+                        'line-color': '#ff9800',
+                        'target-arrow-color': '#ff9800',
+                        'target-arrow-shape': 'triangle',
+                        'curve-style': 'bezier',
+                        'arrow-scale': 1.5
+                    }
+                }
+            ],
+            layout: {
+                name: 'breadthfirst',
+                directed: true,
+                padding: 50
+            }
+        });
+
+        let currentData = []; // 存储最新的数据
+
+        // 核心更新逻辑
+        async function fetchChains() {
+            try {
+                // 使用相对路径，Cloudflare 会自动映射到 functions/api/chains.js
+                const response = await fetch('/api/chains');
+                const data = await response.json();
+                
+                currentData = data;
+                updateUI(data);
+                // 不再自动更新食物网，由按钮触发
+            } catch (err) {
+                console.error("同步数据失败", err);
+            }
+        }
+
+        // 清除数据
+        async function clearData() {
+            if (confirm("确认清除所有学生上传的数据吗？此操作不可撤销。")) {
+                try {
+                    const response = await fetch('/api/chains', {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        alert("数据已成功清除");
+                        cy.elements().remove(); // 同时清除画布
+                        fetchChains(); // 重新拉取空数据
+                    }
+                } catch (err) {
+                    alert("清除数据失败，请检查网络连接");
+                }
+            }
+        }
+
+        // 生成食物网
+        function generateWeb() {
+            if (currentData.length === 0) {
+                alert("暂无学生提交的数据，无法生成食物网。");
+                return;
+            }
+            updateFoodWeb(currentData);
+        }
+
+        function updateUI(data) {
+            document.getElementById('count-chains').innerText = data.length;
+            const students = new Set(data.map(item => item.name));
+            document.getElementById('count-students').innerText = students.size;
+
+            const logList = document.getElementById('log-list');
+            logList.innerHTML = '';
+            
+            if (data.length === 0) {
+                logList.innerHTML = '<div class="log-item">等待学生数据同步...</div>';
+                return;
+            }
+
+            data.slice().reverse().forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'log-item';
+                // 显示具体的食物链链路
+                const chainStr = item.chain.join(' → ');
+                div.innerHTML = `<span>${item.time}</span> <b>${item.name}</b>: ${chainStr}`;
+                logList.appendChild(div);
+            });
+        }
+
+        function updateFoodWeb(data) {
+            cy.elements().remove(); // 先清空当前画布
+
+            const existingNodes = new Set();
+            const existingEdges = new Set();
+
+            data.forEach(item => {
+                const chain = item.chain;
+                for (let i = 0; i < chain.length; i++) {
+                    const nodeName = chain[i];
+                    
+                    // 添加节点
+                    if (!existingNodes.has(nodeName)) {
+                        cy.add({ data: { id: nodeName } });
+                        existingNodes.add(nodeName);
+                    }
+
+                    // 添加边
+                    if (i > 0) {
+                        const source = chain[i-1];
+                        const target = chain[i];
+                        const edgeId = `${source}-${target}`;
+                        if (!existingEdges.has(edgeId)) {
+                            cy.add({ data: { id: edgeId, source: source, target: target } });
+                            existingEdges.add(edgeId);
+                        }
+                    }
+                }
+            });
+
+            // 重新布局
+            cy.layout({ name: 'breadthfirst', directed: true, animate: true }).run();
+        }
+
+        // 定时刷新列表
+        setInterval(fetchChains, 5000);
+        fetchChains(); // 首次执行
+    </script>
+</body>
+</html>
