@@ -8,11 +8,6 @@ let globalData = {
     foodChainSubmissions: []
 };
 
-// 缓存控制：减少KV读取频率
-let lastKVReadTime = 0;
-let KV_CACHE_DURATION = 3000; // 3秒缓存，减少KV读取次数
-let cachedData = null;
-
 export async function onRequest(context) {
     const { request, env } = context;
     const method = request.method;
@@ -31,21 +26,13 @@ export async function onRequest(context) {
         return new Response(null, { status: 204, headers });
     }
 
-    // 智能缓存：减少KV读取频率
+    // 尝试从 KV 获取数据 (如果配置了)
+    // 使用 cacheTtl: 0 绕过边缘缓存，确保读取最新数据
     let data = globalData;
-    const now = Date.now();
-    
     if (env.CHAINS_KV) {
-        // 使用缓存减少KV读取次数
-        if (cachedData && (now - lastKVReadTime) < KV_CACHE_DURATION) {
-            data = cachedData;
-        } else {
-            const stored = await env.CHAINS_KV.get('globalData');
-            if (stored) {
-                data = JSON.parse(stored);
-                cachedData = data;
-                lastKVReadTime = now;
-            }
+        const stored = await env.CHAINS_KV.get('globalData', { cacheTtl: 0 });
+        if (stored) {
+            data = JSON.parse(stored);
         }
     }
 
@@ -65,15 +52,9 @@ export async function onRequest(context) {
                 return new Response(JSON.stringify({ error: '无效的数据类型或载荷' }), { status: 400, headers });
             }
             
-            // 持久化存储 - 使用异步写入，不阻塞响应
+            // 持久化存储
             if (env.CHAINS_KV) {
-                // 异步写入KV，不阻塞响应
-                env.CHAINS_KV.put('globalData', JSON.stringify(data))
-                    .catch(err => console.error('KV write error:', err));
-                
-                // 立即更新缓存
-                cachedData = data;
-                lastKVReadTime = Date.now();
+                await env.CHAINS_KV.put('globalData', JSON.stringify(data));
             } else {
                 globalData = data;
             }
