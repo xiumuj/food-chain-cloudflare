@@ -3,8 +3,3 @@ name = "food-chain-pond"
 compatibility_date = "2024-04-09"
 pages_build_output_dir = "public"
 
-[[kv_namespaces]]
-binding = "CHAINS_KV"
-id = "YOUR_KV_NAMESPACE_ID"
-# 注意：你需要先在 Cloudflare 控制台创建一个 KV 命名空间，并把 ID 替换到上面。
-# 如果不配置 KV，数据只会存在于内存中，部署更新或 Worker 冷启动后会重置。
