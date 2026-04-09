@@ -267,7 +267,7 @@
         // 添加时间戳参数防止浏览器缓存
         async function fetchAllData() {
             try {
-                const response = await fetch('/api/chains?t=' + Date.now());
+                const response = await fetch('https://food-chain-cloudflare.pages.dev/api/chains?t=' + Date.now());
                 const data = await response.json();
                 return { 
                     quizData: data.quizSubmissions || [], 
@@ -472,7 +472,7 @@
         async function confirmClearData() {
             if (confirm('⚠️ 确定要清除所有学生提交的测验和食物链数据吗？此操作不可撤销。')) {
                 try {
-                    await fetch('/api/chains', { method: 'DELETE' });
+                    await fetch('https://food-chain-cloudflare.pages.dev/api/chains', { method: 'DELETE' });
                 } catch (err) {
                     console.error('Clear data error:', err);
                 }

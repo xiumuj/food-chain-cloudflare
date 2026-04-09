@@ -749,7 +749,7 @@
         // 同步数据到 Cloudflare (通用函数)
         async function syncToCloudflare(type, payload) {
             try {
-                const response = await fetch('/api/chains', {
+                const response = await fetch('https://food-chain-cloudflare.pages.dev/api/chains', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ type, payload })
