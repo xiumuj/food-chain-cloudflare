@@ -206,6 +206,7 @@
     <div class="status-badge">
         <div class="dot"></div>
         <span>实时监听中...</span>
+        <span id="last-update-time"></span>
     </div>
 
     <script>
@@ -266,7 +267,18 @@
         // 获取所有学生数据 (从 Cloudflare API)
         async function fetchAllData() {
             try {
-                const response = await fetch('/api/chains');
+                // 添加缓存头，利用浏览器缓存
+                const response = await fetch('/api/chains', {
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
                 const data = await response.json();
                 return { 
                     quizData: data.quizSubmissions || [], 
@@ -284,24 +296,49 @@
 
         // 更新UI：统计、日志、食物网
         async function updateUI() {
-            const { quizData, chainData } = await fetchAllData();
+            // 显示加载状态
+            const statusBadge = document.querySelector('.status-badge');
+            const originalText = statusBadge.innerHTML;
+            statusBadge.innerHTML = '<div class="dot"></div><span>加载中...</span>';
+            statusBadge.style.background = 'rgba(255,193,7,0.1)';
+            statusBadge.style.borderColor = '#ffc107';
+            
+            try {
+                const { quizData, chainData } = await fetchAllData();
 
-            // 统计参与学生（去重）
-            const studentNames = new Set();
-            quizData.forEach(q => studentNames.add(q.name));
-            chainData.forEach(c => studentNames.add(c.name));
-            document.getElementById('count-students').innerText = studentNames.size;
-            document.getElementById('count-quiz').innerText = quizData.length;
-            document.getElementById('count-chains').innerText = chainData.length;
+                // 统计参与学生（去重）
+                const studentNames = new Set();
+                quizData.forEach(q => studentNames.add(q.name));
+                chainData.forEach(c => studentNames.add(c.name));
+                document.getElementById('count-students').innerText = studentNames.size;
+                document.getElementById('count-quiz').innerText = quizData.length;
+                document.getElementById('count-chains').innerText = chainData.length;
 
-            // 更新测验统计（详细：每条链正确/错误人数）
-            updateQuizStats(quizData);
+                // 更新测验统计（详细：每条链正确/错误人数）
+                updateQuizStats(quizData);
 
-            // 更新提交记录（最新在前）
-            updateLogList(quizData, chainData);
+                // 更新提交记录（最新在前）
+                updateLogList(quizData, chainData);
 
-            // 更新食物网图（基于所有正确的食物链提交）
-            updateFoodWeb(chainData);
+                // 更新食物网图（基于所有正确的食物链提交）
+                updateFoodWeb(chainData);
+                
+                // 更新时间戳
+                const now = new Date();
+                document.getElementById('last-update-time').textContent = ` | ${now.toLocaleTimeString()}`;
+                
+                // 恢复正常状态
+                statusBadge.innerHTML = '<div class="dot"></div><span>实时监听中...</span><span id="last-update-time"></span>';
+                statusBadge.style.background = 'rgba(0,255,0,0.1)';
+                statusBadge.style.borderColor = '#4caf50';
+                
+            } catch (error) {
+                // 恢复正常状态
+                statusBadge.innerHTML = originalText;
+                statusBadge.style.background = 'rgba(244,67,54,0.1)';
+                statusBadge.style.borderColor = '#f44336';
+                throw error;
+            }
         }
 
         // 测验统计：显示每条链的正确人数、错误人数，以及整体正确率
@@ -500,14 +537,28 @@
 
         // 定时刷新（每5秒）
         let interval = null;
+        let retryCount = 0;
+        const MAX_RETRIES = 3;
+        
         function startAutoRefresh() {
             if (interval) clearInterval(interval);
-            interval = setInterval(() => {
-                updateUI();
-                // 闪烁一下状态灯（可选）
-                const dot = document.querySelector('.status-badge .dot');
-                if (dot) dot.style.animation = 'none';
-                setTimeout(() => { if(dot) dot.style.animation = 'pulse 1.5s infinite'; }, 10);
+            interval = setInterval(async () => {
+                try {
+                    await updateUI();
+                    retryCount = 0; // 重置重试计数
+                    // 闪烁一下状态灯（可选）
+                    const dot = document.querySelector('.status-badge .dot');
+                    if (dot) dot.style.animation = 'none';
+                    setTimeout(() => { if(dot) dot.style.animation = 'pulse 1.5s infinite'; }, 10);
+                } catch (error) {
+                    retryCount++;
+                    console.error(`Refresh failed (attempt ${retryCount}/${MAX_RETRIES}):`, error);
+                    
+                    if (retryCount >= MAX_RETRIES) {
+                        showTemporaryMessage('连接不稳定，请稍后重试', '#ff9800');
+                        retryCount = 0;
+                    }
+                }
             }, 5000);
         }
 
