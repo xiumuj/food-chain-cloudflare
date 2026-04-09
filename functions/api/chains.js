@@ -28,6 +28,12 @@ export async function onRequest(context) {
 
     // 尝试从 KV 获取数据 (如果配置了)
     let data = globalData;
+    if (env.CHAINS_KV) {
+        const stored = await env.CHAINS_KV.get('globalData');
+        if (stored) {
+            data = JSON.parse(stored);
+        }
+    }
 
     // 1. 学生提交数据 (POST)
     if (method === 'POST') {
@@ -46,7 +52,11 @@ export async function onRequest(context) {
             }
             
             // 持久化存储
-            globalData = data;
+            if (env.CHAINS_KV) {
+                await env.CHAINS_KV.put('globalData', JSON.stringify(data));
+            } else {
+                globalData = data;
+            }
             
             return new Response(JSON.stringify({ status: 'success', message: '数据已同步' }), { headers });
         } catch (err) {
@@ -65,7 +75,11 @@ export async function onRequest(context) {
             quizSubmissions: [],
             foodChainSubmissions: []
         };
-        globalData = data;
+        if (env.CHAINS_KV) {
+            await env.CHAINS_KV.put('globalData', JSON.stringify(data));
+        } else {
+            globalData = data;
+        }
         return new Response(JSON.stringify({ status: 'success', message: '数据已清空' }), { headers });
     }
 
