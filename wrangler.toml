@@ -1,7 +1,7 @@
 # wrangler.toml
 name = "food-chain-pond"
 compatibility_date = "2024-04-09"
-pages_build_output_dir = "."
+pages_build_output_dir = "public"
 
 [[kv_namespaces]]
 binding = "CHAINS_KV"
