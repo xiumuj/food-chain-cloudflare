@@ -274,10 +274,10 @@
                 };
             } catch (err) {
                 console.error('Fetch error:', err);
-                // 降级回本地存储
+                // 如果获取失败，返回空数据，而不是降级回本地存储
                 return {
-                    quizData: JSON.parse(localStorage.getItem(STORAGE_KEYS.QUIZ) || '[]'),
-                    chainData: JSON.parse(localStorage.getItem(STORAGE_KEYS.CHAIN) || '[]')
+                    quizData: [],
+                    chainData: []
                 };
             }
         }
