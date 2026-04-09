@@ -3,7 +3,10 @@
 
 // 注意：Cloudflare Worker 全局变量在冷启动或重新部署时会重置。
 // 如果需要持久化存储，建议配置 Cloudflare KV 并在 Wrangler 中绑定为 CHAINS_KV。
-let globalChains = [];
+let globalData = {
+    quizSubmissions: [],
+    foodChainSubmissions: []
+};
 
 export async function onRequest(context) {
     const { request, env } = context;
@@ -24,57 +27,58 @@ export async function onRequest(context) {
     }
 
     // 尝试从 KV 获取数据 (如果配置了)
-    let chains = globalChains;
+    let data = globalData;
     if (env.CHAINS_KV) {
-        const stored = await env.CHAINS_KV.get('globalChains');
+        const stored = await env.CHAINS_KV.get('globalData');
         if (stored) {
-            chains = JSON.parse(stored);
+            data = JSON.parse(stored);
         }
     }
 
-    // 1. 学生提交正确食物链 (POST)
+    // 1. 学生提交数据 (POST)
     if (method === 'POST') {
         try {
             const body = await request.json();
-            const { foodChain, studentName } = body;
+            const { type, payload } = body;
             
-            if (foodChain && Array.isArray(foodChain)) {
-                chains.push({
-                    name: studentName || "学生",
-                    chain: foodChain,
-                    time: new Date().toLocaleTimeString('zh-CN', { timeZone: 'Asia/Shanghai' })
-                });
-                
-                // 限制记录数量
-                if (chains.length > 100) chains.shift();
-                
-                // 持久化存储
-                if (env.CHAINS_KV) {
-                    await env.CHAINS_KV.put('globalChains', JSON.stringify(chains));
-                } else {
-                    globalChains = chains;
-                }
-                
-                return new Response(JSON.stringify({ status: 'success', message: '已同步到教师端' }), { headers });
+            if (type === 'quiz' && payload) {
+                data.quizSubmissions.push(payload);
+                if (data.quizSubmissions.length > 200) data.quizSubmissions.shift();
+            } else if (type === 'chain' && payload) {
+                data.foodChainSubmissions.push(payload);
+                if (data.foodChainSubmissions.length > 200) data.foodChainSubmissions.shift();
+            } else {
+                return new Response(JSON.stringify({ error: '无效的数据类型或载荷' }), { status: 400, headers });
             }
-            return new Response(JSON.stringify({ error: '数据格式不正确' }), { status: 400, headers });
+            
+            // 持久化存储
+            if (env.CHAINS_KV) {
+                await env.CHAINS_KV.put('globalData', JSON.stringify(data));
+            } else {
+                globalData = data;
+            }
+            
+            return new Response(JSON.stringify({ status: 'success', message: '数据已同步' }), { headers });
         } catch (err) {
-            return new Response(JSON.stringify({ error: '无效的 JSON 数据' }), { status: 400, headers });
+            return new Response(JSON.stringify({ error: '处理数据时出错' }), { status: 500, headers });
         }
     }
 
-    // 2. 教师端/学生端获取所有数据 (GET)
+    // 2. 获取所有数据 (GET)
     if (method === 'GET') {
-        return new Response(JSON.stringify(chains), { headers });
+        return new Response(JSON.stringify(data), { headers });
     }
 
     // 3. 教师端清除所有数据 (DELETE)
     if (method === 'DELETE') {
-        chains = [];
+        data = {
+            quizSubmissions: [],
+            foodChainSubmissions: []
+        };
         if (env.CHAINS_KV) {
-            await env.CHAINS_KV.put('globalChains', JSON.stringify(chains));
+            await env.CHAINS_KV.put('globalData', JSON.stringify(data));
         } else {
-            globalChains = chains;
+            globalData = data;
         }
         return new Response(JSON.stringify({ status: 'success', message: '数据已清空' }), { headers });
     }
